@@ -1,0 +1,40 @@
+{
+  "name": "spaceship ",
+  "version": "0.0.0",
+  "description": "i do not know what im doing",
+  "dependencies": {
+    "expose-loader": "^0.6.0",
+    "webpack": "^1.5.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alfredkam/yakojs.git"
+  },
+  "scripts": {
+    "start": "./node_modules/webpack-dev-server/bin/webpack-dev-server.js --hot"
+  },
+  "keywords": [
+  ],
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "devDependencies": {
+    "autoprefixer-loader": "^1.2.0",
+    "chai": "^2.0.0",
+    "coveralls": "^2.11.2",
+    "es6-loader": "^0.2.0",
+    "file-loader": "^0.8.1",
+    "istanbul": "^0.3.5",
+    "jsx-loader": "^0.12.2",
+    "jymin": "^0.4.1",
+    "less": "^2.4.0",
+    "less-loader": "^2.1.0",
+    "mocha": "^2.1.0",
+    "mocha-lcov-reporter": "0.0.1",
+    "react": "^0.12.2",
+    "react-hot-loader": "^1.2.3",
+    "style-loader": "^0.8.3",
+    "webpack-dev-middleware": "^1.0.11",
+    "webpack-dev-server": "^1.7.0"
+  }
+}
