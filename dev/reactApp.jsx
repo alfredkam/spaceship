@@ -6,6 +6,8 @@ var gridProperties = ['x','o'];
 var virtualMatrix = [];
 var innerMatrix = [];
 var DOMMatrix = [];
+var DOMMatrixRef = {};
+var virtualMatrixReference = {};
 
 var body = document.getElementsByTagName("body")[0];
 
@@ -25,6 +27,7 @@ var makeElement = function (m, n, pos, content) {
     obj.style.top = m * size + "px";
     obj.style.left = n * size + "px";
     obj.style.cursor = "pointer";
+    DOMMatrixRef[m + "." + n] = obj;
     return obj;
 };
 
@@ -124,30 +127,64 @@ var updatePos = function (element, m, n, newM, newN) {
         element.dataset.posM = newM;
         element.dataset.posN = newN;
         virtualMatrix[m][n] = 0;
+        DOMMatrixRef[newM + "." + newN] = element;
+        DOMMatrixRef[m + "." + n] = 0;
     } catch(e) {}
 };
 
 var shouldUpdateElementPosition = function (element, direction) {
-    var m = parseInt(element.style.top);
-    var n = parseInt(element.style.left);
-    var y = parseInt(element.dataset.posM);
-    var x = parseInt(element.dataset.posN);
+    // TODO:: need to account for offset
+    var pY = parseInt(element.style.top);
+    var pX = parseInt(element.style.left);
+    var y = m = parseInt(element.dataset.posM);
+    var x = n = parseInt(element.dataset.posN);
 
+    var half = size / 2;
+    // backward looking
     if (direction == 'left') {
         // already at the edge
         if (x === 0) return;
-        
+        if ((x - 1) * size + half > pX) {
+            updatePos(element, y, x, y, x - 1);
+        }
+        return;
+    } else if (direction == 'top') {
+        if (y === 0) return;
+        if ((y - 1) * size + half > pY) {
+            updatePos(element, y, x, y - 1, x);
+        }
+    // forward looking
+    } else if (direction == 'right') {
+        if (x === virtualMatrix[0].length - 1) return;
+        if ((x + 1) * size - half < pX) {
+            updatePos(element, y, x, y, x + 1);
+        }
+    } else if (direction == 'bottom') {
+        if (y === virtualMatrix.length - 1) return;
+        if ((y + 1) * size - half < pY) {
+            updatePos(element, y, x, y + 1, x);
+        }
     }
+    return;
 };
 
 var shouldSnapToGrid = function (element) {
     // snap to grid mech
+    var y = m = parseInt(element.dataset.posM);
+    var x = n = parseInt(element.dataset.posN);
+
+    element.style.top = m * size + "px";
+    element.style.left = n * size + "px";
 };
+
+var remove = function (element) {
+    element.parentElement.removeChild(element);
+}
 
 
 // lets make it expensive for now
 // prunes the grids and scores them
-var pruneGrid = function () {
+var pruneGrid = function (shouldRemove) {
     var score = 0;
     var matrix = virtualMatrix;
     for (var m = 0; m < matrix.length; m++) {
@@ -160,6 +197,15 @@ var pruneGrid = function () {
                         score +=1;
                         matrix[m][n + 1] = 0;
                         matrix[m][n + 2] = 0;
+
+                        if (shouldRemove) {
+                            var ref = DOMMatrixRef[m + "." + (n + 1)];
+                            remove(ref);
+                            ref = 0;
+                            ref = DOMMatrixRef[m + "." + (n + 2)];
+                            remove(ref);
+                            ref = 0;
+                        }
                     }
                 } catch(e) {}
                 try {
@@ -169,13 +215,23 @@ var pruneGrid = function () {
                         score +=1;
                         matrix[m + 1][n] = 0;
                         matrix[m + 2][n] = 0;
+                        if (shouldRemove) {
+                            var ref = DOMMatrixRef[(m + 1) + "." + n];
+                            remove(ref);
+                            ref = 0;
+                            ref = DOMMatrixRef[(m + 2) + "." + n];
+                            remove(ref);
+                            ref = 0;
+                        }
                     }
                 } catch(e) {}
             }
         }
     }
+    return score;
 };
 
+var currentScore = 0;
 var attachEvent = function (element) {
     var prev = 0;
     var currDirection = 0;
@@ -216,9 +272,11 @@ var attachEvent = function (element) {
         document.onmouseup = mouseup = function (e) {
             shouldSnapToGrid(element);
             // returns score here, do something with it;
-            pruneGrid();
+            var shouldRemove = true;
+            currentScore += pruneGrid(shouldRemove);
             document.onmousemove = null;
             document.onmouseup = null;
+            console.log('score:', currentScore);
             // need to snap to grid
         };
     };
