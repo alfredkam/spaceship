@@ -2,6 +2,8 @@
 var grids = [5,5];
 // pixel size
 var size = 40;
+var offsetX = 0;
+var offsetY = 0;
 var gridProperties = ['x','o'];
 var virtualMatrix = [];
 var innerMatrix = [];
@@ -9,7 +11,12 @@ var DOMMatrix = [];
 var DOMMatrixRef = {};
 var virtualMatrixReference = {};
 
-var body = document.getElementsByTagName("body")[0];
+var htmlBody = document.getElementsByTagName("body")[0];
+var body = document.createElement("div");
+body.style.position = 'relative';
+body.style.top = '100px';
+body.style.left = '100px';
+htmlBody.appendChild(body);
 
 var makeElement = function (m, n, pos, content) {
     var obj = document.createElement('div');
@@ -179,7 +186,7 @@ var shouldSnapToGrid = function (element) {
 
 var remove = function (element) {
     element.parentElement.removeChild(element);
-}
+};
 
 
 // lets make it expensive for now
@@ -239,12 +246,15 @@ var attachEvent = function (element) {
     element.onmousedown = function () {
         document.onmousemove = mousemove = function (e) {
             e.preventDefault();
+
+            var y = e.pageY - body.offsetTop;
+            var x = e.pageX - body.offsetLeft;
             // now need to figure out if they moving left or right, and lock it down
             // the grid should be moving relative to finger instead of jumping to it
             // need to adjust the x y relative to grid
             var direction = getTileDirection(element, {
-                x: e.pageX,
-                y: e.pageY
+                x: x,
+                y: y
             });
 
             if (!currDirection) {
@@ -261,9 +271,9 @@ var attachEvent = function (element) {
             }
 
             if ((currDirection == 'left') || (currDirection == 'right')) {
-                element.style.left = e.pageX + "px";
+                element.style.left = x + "px";
             } else {
-                element.style.top = e.pageY + "px";
+                element.style.top = y + "px";
             }
 
             shouldUpdateElementPosition(element, direction);
